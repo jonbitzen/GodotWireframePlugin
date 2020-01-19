@@ -13,23 +13,23 @@ var vertexSelector = -1
 
 ##################### ENGINE CALLBACKS #############################################
 
-func _enter_tree():
-	get_selection().connect("selection_changed", self, "selectionChanged")
-	get_base_control().add_child(helpDialog)
+func _enter_tree():	
+	get_editor_interface().get_selection().connect("selection_changed", self, "selectionChanged")
+	get_editor_interface().get_base_control().add_child(helpDialog)
 	dock.wftScript = self
 	add_control_to_dock(DOCK_SLOT_RIGHT_BL, dock)
 
 func _exit_tree():
-	get_selection().disconnect("selection_changed", self, "selectionChanged")
-	get_base_control().remove_child(helpDialog)
+	get_editor_interface().get_selection().disconnect("selection_changed", self, "selectionChanged")
+	get_editor_interface().get_base_control().remove_child(helpDialog)
 	helpDialog.free()
 	remove_control_from_docks(dock)
 	dock.free()
 
-func forward_spatial_input_event(camera, event):
+func forward_spatial_gui_input(camera, event):
 	if (!canEdit):
 		return
-	if (event.type == InputEvent.MOUSE_BUTTON):
+	if (event is InputEventMouseButton):
 		if (event.button_index == BUTTON_LEFT and event.pressed):
 			var targetMesh = selectedNodes[dock.getSelTargetMeshId()].get_mesh()
 			var surfaceName = dock.getSelTargetSurfaceName()
@@ -49,7 +49,7 @@ func forward_spatial_input_event(camera, event):
 					if (testEdges(meshTool, i, targetMesh.get_meta("VEL")[surfaceName])):
 						var vertex = meshTool.get_vertex(i)
 						vertex = camera.unproject_position(selectedNodes[dock.getSelTargetMeshId()].get_transform().basis * vertex + selectedNodes[dock.getSelTargetMeshId()].get_transform().origin)
-						var distance = vertex.distance_to(event.pos)
+						var distance = vertex.distance_to(event.position)
 						if (distance < oldDistance):
 							oldDistance = distance
 							index = i
@@ -82,7 +82,7 @@ func forward_spatial_input_event(camera, event):
 					#transform and unproject the points
 					edgePoint1 = camera.unproject_position(selectedNodes[dock.getSelTargetMeshId()].get_transform().basis * edgePoint1 + selectedNodes[dock.getSelTargetMeshId()].get_transform().origin)
 					edgePoint2 = camera.unproject_position(selectedNodes[dock.getSelTargetMeshId()].get_transform().basis * edgePoint2 + selectedNodes[dock.getSelTargetMeshId()].get_transform().origin)
-					var distance = distanceToEdge(edgePoint1, edgePoint2, event.pos) #transform them!!
+					var distance = distanceToEdge(edgePoint1, edgePoint2, event.position)
 					#TODO
 					if (distance < oldDistance):
 						oldDistance = distance
@@ -101,7 +101,7 @@ func forward_spatial_input_event(camera, event):
 			elif (activeTool == dock.SELECTION_TOOL_INVERSE):
 				selectInverse(targetMesh, surfaceName)
 				return true
-	elif (event.type == InputEvent.KEY):
+	elif (event is InputEventKey):
 		if (event.scancode == KEY_D and event.pressed):
 			deleteSelection()
 		elif (event.scancode == KEY_C and event.pressed):
@@ -120,7 +120,7 @@ func handles(object):
 	#this throws a shit ton of errors in console
 	#and it can't handle multiple selected nodes so far
 #	yield(get_selection(), "selection_changed")
-	return object extends MeshInstance 
+	return object is MeshInstance
 
 ########################## SIGNALS ################################
 
@@ -183,10 +183,10 @@ func deleteSurface():
 	dock.showRenameSurface(false)
 	var targetMesh = selectedNodes[dock.getSelTargetMeshId()].get_mesh()
 	var ids = surfaceNameToId(targetMesh, dock.getSelTargetSurfaceName())
-	targetMesh.surface_remove(int(ids.x))
+	targetMesh.surface_remove_and_collide(int(ids.x))
 	#delete meta
 	if (targetMesh.has_meta("orgMesh")):
-		targetMesh.get_meta("orgMesh").surface_remove(int(ids.y))
+		targetMesh.get_meta("orgMesh").surface_remove_and_collide(int(ids.y))
 		targetMesh.get_meta("VEL").erase(dock.getSelTargetSurfaceName())
 		targetMesh.get_meta("COL").erase(dock.getSelTargetSurfaceName())
 		if (targetMesh.get_meta("orgMesh").get_surface_count() == 0):
@@ -293,7 +293,7 @@ func cancelWireframe():
 func selectionChanged():
 	dock.showRenameSurface(false)
 	dock.setWarning("")
-	selectedNodes = get_selection().get_selected_nodes()
+	selectedNodes = get_editor_interface().get_selection().get_selected_nodes()
 	edgeSelector.clear()
 	vertexSelector = -1
 	dock.clearSelTargetMesh()
@@ -304,7 +304,7 @@ func selectionChanged():
 	var validNodes = 0
 	for node in selectedNodes:
 		i += 1 
-		if (node extends MeshInstance):
+		if (node is MeshInstance):
 			if (!isMeshInvalid(node)): #mesh is valid, add it to target and source
 				dock.setTargetMeshName(node.get_name(), i)
 				dock.setSourceMeshName(node.get_name(), i)
@@ -335,7 +335,6 @@ func deleteSelection():
 		var targetMesh = selectedNodes[dock.getSelTargetMeshId()].get_mesh()
 		var meshTool = MeshDataTool.new()
 		var ids = surfaceNameToId(targetMesh, dock.getSelTargetSurfaceName())
-		var meshTool = MeshDataTool.new()
 		meshTool.create_from_surface(targetMesh.get_meta("orgMesh"), int(ids.y))
 		
 		for edgeIndex in meshTool.get_vertex_edges(vertexSelector):
@@ -443,7 +442,7 @@ func generateWireframeMesh(meshTool, mesh, surfaceId, surfaceName):
 	
 	var oldMat = mesh.surface_get_material(surfaceId)
 	mesh.surface_set_material(surfaceId, null)	
-	mesh.surface_remove(surfaceId)
+	mesh.surface_remove_and_collide(surfaceId)
 	surfaceTool.commit(mesh)
 	mesh.surface_set_name(mesh.get_surface_count() - 1, surfaceName)
 	mesh.surface_set_material(mesh.get_surface_count() - 1, oldMat)
@@ -574,7 +573,7 @@ func doCommitWireframe(meshInstance, targetMesh, surfaceName):
 	edgeSelector.clear()
 	generateWireframeMesh(meshTool, targetMesh, int(ids.x), surfaceName)
 	
-	targetMesh.get_meta("orgMesh").surface_remove(int(ids.y))
+	targetMesh.get_meta("orgMesh").surface_remove_and_collide(int(ids.y))
 	targetMesh.get_meta("VEL").erase(surfaceName)
 	targetMesh.get_meta("COL").erase(surfaceName)
 	targetMesh.surface_set_material(int(ids.x), null)
@@ -613,11 +612,11 @@ func doCancelWireframe(meshInstance, targetMesh, surfaceName):
 	for i in range(meshTool.get_vertex_count()):
 		meshTool.set_vertex_color(i, Color(0.0, 0.0, 0.0))
 	#mesh
-	targetMesh.surface_remove(int(ids.x))
+	targetMesh.surface_remove_and_collide(int(ids.x))
 	meshTool.commit_to_surface(targetMesh)
 	targetMesh.surface_set_name(targetMesh.get_surface_count() - 1, surfaceName)	
 	#meta mesh
-	targetMesh.get_meta("orgMesh").surface_remove(int(ids.y))
+	targetMesh.get_meta("orgMesh").surface_remove_and_collide(int(ids.y))
 	targetMesh.get_meta("VEL").erase(surfaceName)
 	targetMesh.get_meta("COL").erase(surfaceName)
 	

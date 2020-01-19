@@ -168,9 +168,9 @@ func getRenameSurfaceText():
 	return get_node("vbox/hboxSur2/txtedSurName").get_text()
 
 func showRenameSurface(show):
-		buttons[2].set_hidden(show)
-		get_node("vbox/hboxSur2/txtedSurName").set_hidden(!show)
-		buttons[3].set_hidden(!show)
+		buttons[2].visible = !(show)
+		get_node("vbox/hboxSur2/txtedSurName").visible = !(!show)
+		buttons[3].visible = !(!show)
 		if (show):
 			get_node("vbox/hboxSur2/txtedSurName").set_text(getSelTargetSurfaceName())
 
