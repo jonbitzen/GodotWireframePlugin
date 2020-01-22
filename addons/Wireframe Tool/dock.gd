@@ -14,6 +14,7 @@ var isDockDisabled = false
 var isWFTDisabled = true
 
 func _enter_tree():
+	print("enter tree")
 	get_node("vbox/btnHelp").connect("pressed", wftScript, "showHelp")
 	buttons.append(get_node("vbox/hboxSur1/btnTMesh"))
 	buttons[0].set_text("Mesh")#this doesn't work in editor
@@ -45,17 +46,17 @@ func _enter_tree():
 	buttons.append(get_node("vbox/hboxWFT/btnCancel"))
 	buttons[10].connect("pressed", wftScript, "cancelWireframe")
 	
-	buttons.append(get_node("vbox/group/GridContainer/btnNone"))
+	buttons.append(get_node("vbox/GridContainer/btnNone"))
 	buttons[11].connect("pressed", self, "setToolNone")
-	buttons.append(get_node("vbox/group/GridContainer/btnVertex"))
+	buttons.append(get_node("vbox/GridContainer/btnVertex"))
 	buttons[12].connect("pressed", self, "setToolVertex")
-	buttons.append(get_node("vbox/group/GridContainer/btnEdge"))
+	buttons.append(get_node("vbox/GridContainer/btnEdge"))
 	buttons[13].connect("pressed", self, "setToolEdge")
-	buttons.append(get_node("vbox/group/GridContainer/btnLoop"))
+	buttons.append(get_node("vbox/GridContainer/btnLoop"))
 	buttons[14].connect("pressed", self, "setToolLoop")
-	buttons.append(get_node("vbox/group/GridContainer/btnAll"))
+	buttons.append(get_node("vbox/GridContainer/btnAll"))
 	buttons[15].connect("pressed", self, "setToolALL")
-	buttons.append(get_node("vbox/group/GridContainer/btnInverse"))
+	buttons.append(get_node("vbox/GridContainer/btnInverse"))
 	buttons[16].connect("pressed", self, "setToolInverse")
 	
 	buttons.append(get_node("vbox/gridActions/btnDelete"))
@@ -74,6 +75,7 @@ func _enter_tree():
 	disableAll(true)
 
 func _exit_tree():
+	print("exit tree")
 	get_node("vbox/btnHelp").disconnect("pressed", wftScript, "showHelp")
 	buttons[0].disconnect("item_selected", wftScript, "targetMeshSelection")
 	buttons[1].disconnect("item_selected", wftScript, "targetSurfaceSelection")
@@ -100,14 +102,19 @@ func _exit_tree():
 
 func setToolNone():
 	wftScript.activeTool = SELECTION_TOOL_NONE
+	
 func setToolVertex():
 	wftScript.activeTool = SELECTION_TOOL_VERTEX
+	
 func setToolEdge():
 	wftScript.activeTool = SELECTION_TOOL_EDGES
+	
 func setToolLoop():
 	wftScript.activeTool = SELECTION_TOOL_LOOP
+	
 func setToolALL():
 	wftScript.activeTool = SELECTION_TOOL_ALL
+	
 func setToolInverse():
 	wftScript.activeTool = SELECTION_TOOL_INVERSE
 
@@ -126,13 +133,13 @@ func setSourceSurfaceName(name):
 #########################################################################
 
 func getSelTargetMeshId():
-	return buttons[0].get_selected_ID()
+	return buttons[0].get_selected_id()
 
 func getSelTargetSurfaceName():
 	return buttons[1].get_item_text(buttons[1].get_selected())
 
 func getSelSourceMeshId():
-	return buttons[5].get_selected_ID()
+	return buttons[5].get_selected_id()
 
 func getSelSourceSurfaceName():
 	return buttons[6].get_item_text(buttons[6].get_selected())
@@ -153,10 +160,10 @@ func clearSelSourceSurface():
 
 ###########################################
 func getColor():
-	return get_node("vbox/gridActions/ColorPickerButton").get_color()
+	return get_node("vbox/gridActions/ColorPickerButton").get_picker().color
 
 func setColor(color):
-	get_node("vbox/gridActions/ColorPickerButton").set_color(color)
+	get_node("vbox/gridActions/ColorPickerButton").get_picker().color = color
 
 func setWarning(text):
 	get_node("vbox/lblWarning").set_text(text)

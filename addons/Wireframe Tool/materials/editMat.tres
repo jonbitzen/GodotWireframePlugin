@@ -2,7 +2,11 @@
 
 [sub_resource type="Shader" id=1]
 code = "shader_type spatial;
+render_mode unshaded;
 
+void vertex() {
+	VERTEX = VERTEX * 1.005;
+}
 
 void light() {	
 	DIFFUSE_LIGHT = ALBEDO;
@@ -10,16 +14,19 @@ void light() {
 
 void fragment() {
 	
-	float ndot = dot(NORMAL, VERTEX);
+//	ALBEDO = vec3(COLOR.xyz);
+//	ALPHA = 1.0;
 	
-	if (ndot <= 0.0) {
-		ALBEDO = vec3(0.0, 0.0, 0.0);
-		ALPHA = 0.0;
-	}
-	else {
-		ALBEDO = vec3(COLOR.xyz);
-		ALPHA = 1.0;
-	}
+//	float ndot = dot(NORMAL, VERTEX);
+//
+//	if (ndot <= 0.0) {
+//		ALBEDO = vec3(0.0, 0.0, 0.0);
+//		ALPHA = 0.0;
+//	}
+//	else {
+//		ALBEDO = vec3(COLOR.xyz);
+//		ALPHA = 1.0;
+//	}
 	
 }"
 

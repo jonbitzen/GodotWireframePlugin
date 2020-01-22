@@ -125,13 +125,21 @@ func handles(object):
 ########################## SIGNALS ################################
 
 func targetMeshSelection(id):
+	print("targetMeshSelection")
 	dock.clearSelTargetSurface()
 	surfaceGUIFill(selectedNodes[id].get_mesh(), true)
 	surfaceGUITest(selectedNodes[id].get_mesh(), dock.getSelTargetSurfaceName())
 	dock.showRenameSurface(false)
 
 func targetSurfaceSelection(id):
-	surfaceGUITest(selectedNodes[dock.getSelTargetMeshId()].get_mesh(), dock.getSelTargetSurfaceName())
+	
+	var mesh_id = dock.getSelTargetMeshId()
+	var mesh = selectedNodes[mesh_id].get_mesh()
+	var surface_name = dock.getSelTargetSurfaceName()
+	
+	print("mesh_id: " + str(mesh_id))
+	print("surface_name: " + surface_name)	
+	surfaceGUITest(mesh, surface_name)
 	dock.showRenameSurface(false)
 
 func sourceMeshSelection(id):
@@ -183,10 +191,10 @@ func deleteSurface():
 	dock.showRenameSurface(false)
 	var targetMesh = selectedNodes[dock.getSelTargetMeshId()].get_mesh()
 	var ids = surfaceNameToId(targetMesh, dock.getSelTargetSurfaceName())
-	targetMesh.surface_remove_and_collide(int(ids.x))
+	targetMesh.surface_remove(int(ids.x))
 	#delete meta
 	if (targetMesh.has_meta("orgMesh")):
-		targetMesh.get_meta("orgMesh").surface_remove_and_collide(int(ids.y))
+		targetMesh.get_meta("orgMesh").surface_remove(int(ids.y))
 		targetMesh.get_meta("VEL").erase(dock.getSelTargetSurfaceName())
 		targetMesh.get_meta("COL").erase(dock.getSelTargetSurfaceName())
 		if (targetMesh.get_meta("orgMesh").get_surface_count() == 0):
@@ -442,23 +450,29 @@ func generateWireframeMesh(meshTool, mesh, surfaceId, surfaceName):
 	
 	var oldMat = mesh.surface_get_material(surfaceId)
 	mesh.surface_set_material(surfaceId, null)	
-	mesh.surface_remove_and_collide(surfaceId)
+	mesh.surface_remove(surfaceId)
 	surfaceTool.commit(mesh)
 	mesh.surface_set_name(mesh.get_surface_count() - 1, surfaceName)
 	mesh.surface_set_material(mesh.get_surface_count() - 1, oldMat)
 
 #fill surface list from mesh - if isTarget = false -> it's source, do name check
 func surfaceGUIFill(mesh, isTarget):
+	print("surfaceGUIFill")
 	var renSurCount = 0
+	print("surface count: " + str(mesh.get_surface_count()))
 	for i in range(mesh.get_surface_count()):
+		print("surface name: " + mesh.surface_get_name(i))
 		if (mesh.surface_get_name(i) == ""):
+			print("no name")
 			renSurCount += 1
 			dock.setWarning("Found %d surface(s) without name! Every surface needs to have an unique name. I named them for you." % renSurCount)
 			mesh.surface_set_name(i, "sur_%d" % nameCounter)
 			nameCounter += 1
 		if (isTarget):
+			print("is target")
 			dock.setTargetSurfaceName(mesh.surface_get_name(i))
 		else:
+			print("is not target")
 			dock.setSourceSurfaceName(mesh.surface_get_name(i))
 
 #test if surface is in metadata - to set the GUI
@@ -573,7 +587,7 @@ func doCommitWireframe(meshInstance, targetMesh, surfaceName):
 	edgeSelector.clear()
 	generateWireframeMesh(meshTool, targetMesh, int(ids.x), surfaceName)
 	
-	targetMesh.get_meta("orgMesh").surface_remove_and_collide(int(ids.y))
+	targetMesh.get_meta("orgMesh").surface_remove(int(ids.y))
 	targetMesh.get_meta("VEL").erase(surfaceName)
 	targetMesh.get_meta("COL").erase(surfaceName)
 	targetMesh.surface_set_material(int(ids.x), null)
@@ -612,11 +626,11 @@ func doCancelWireframe(meshInstance, targetMesh, surfaceName):
 	for i in range(meshTool.get_vertex_count()):
 		meshTool.set_vertex_color(i, Color(0.0, 0.0, 0.0))
 	#mesh
-	targetMesh.surface_remove_and_collide(int(ids.x))
+	targetMesh.surface_remove(int(ids.x))
 	meshTool.commit_to_surface(targetMesh)
 	targetMesh.surface_set_name(targetMesh.get_surface_count() - 1, surfaceName)	
 	#meta mesh
-	targetMesh.get_meta("orgMesh").surface_remove_and_collide(int(ids.y))
+	targetMesh.get_meta("orgMesh").surface_remove(int(ids.y))
 	targetMesh.get_meta("VEL").erase(surfaceName)
 	targetMesh.get_meta("COL").erase(surfaceName)
 	

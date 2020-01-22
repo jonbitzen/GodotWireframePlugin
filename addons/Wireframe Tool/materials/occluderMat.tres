@@ -6,17 +6,19 @@ code = "shader_type spatial;
 uniform vec4 ambient;
 
 void vertex() {
-	VERTEX = VERTEX * 1.005;
+//	VERTEX = VERTEX * 1.005;
+//	POINT_SIZE = 3.0;
 }
 
 void light() {
 	DIFFUSE_LIGHT = ambient.xyz;
+//	DIFFUSE_LIGHT = vec3(1.0, 1.0, 1.0);
 }
 
 void fragment() {
-	
+//	ALBEDO = vec3(1.0, 0.0, 0.0);
 }"
 
 [resource]
 shader = SubResource( 1 )
-shader_param/ambient = null
+shader_param/ambient = Plane( 0, 0, 0, 0 )
